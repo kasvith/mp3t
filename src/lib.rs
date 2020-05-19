@@ -36,13 +36,18 @@ impl ID3V1Tag {
         if String::from_utf8_lossy(&data[0..3]) != "TAG" {
             return Err(ID3V1Error {});
         }
+        let mut genere: usize = generes::TYPES.len() - 1;
+        if data[127] < 193 {
+            genere = data[127] as usize;
+        }
+
         Ok(ID3V1Tag {
             song_name: String::from_utf8_lossy(&data[3..33]).trim().to_owned(),
             artist: String::from_utf8_lossy(&data[33..63]).trim().to_owned(),
             album_name: String::from_utf8_lossy(&data[63..93]).trim().to_owned(),
             year: String::from_utf8_lossy(&data[93..97]).trim().to_owned(),
             comment: String::from_utf8_lossy(&data[97..127]).trim().to_owned(),
-            genere: generes::TYPES[data[127] as usize].to_string(),
+            genere: generes::TYPES[genere].to_string(),
         })
     }
 }
