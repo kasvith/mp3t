@@ -4,7 +4,9 @@ use std::error::Error;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
-pub struct ID3V1Error;
+pub struct ID3V1Error {
+    pub message: &'static str,
+}
 
 impl fmt::Display for ID3V1Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -18,7 +20,7 @@ impl Error for ID3V1Error {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ID3V1Tag {
     pub song_name: String,
     pub artist: String,
@@ -31,10 +33,14 @@ pub struct ID3V1Tag {
 impl ID3V1Tag {
     pub fn new(data: &[u8]) -> Result<ID3V1Tag, ID3V1Error> {
         if data.len() < 128 {
-            return Err(ID3V1Error {});
+            return Err(ID3V1Error {
+                message: "Invalid data length",
+            });
         }
         if String::from_utf8_lossy(&data[0..3]) != "TAG" {
-            return Err(ID3V1Error {});
+            return Err(ID3V1Error {
+                message: "Invalid TAG",
+            });
         }
         let mut genere: usize = generes::TYPES.len() - 1;
         if data[127] < 193 {
@@ -59,8 +65,10 @@ mod tests {
     fn test_id3v1_tag_new_invalid_tag() {
         let data: [u8; 128] = [b'X'; 128];
         assert_eq!(
-            ID3V1Tag::new(&data).unwrap_err(),
-            ID3V1Error,
+            ID3V1Tag::new(&data),
+            Err(ID3V1Error {
+                message: "Invalid TAG"
+            }),
             "Should return ID3V1Error"
         );
     }
@@ -69,8 +77,10 @@ mod tests {
     fn test_id3v1_tag_new_invalid_size_buffer() {
         let data: [u8; 10] = [b'X'; 10];
         assert_eq!(
-            ID3V1Tag::new(&data).unwrap_err(),
-            ID3V1Error,
+            ID3V1Tag::new(&data),
+            Err(ID3V1Error {
+                message: "Invalid data length"
+            }),
             "Should return ID3V1Error"
         );
     }
