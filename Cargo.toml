@@ -8,3 +8,6 @@ edition = "2018"
 
 [dependencies]
 clap = "2.33.1"
+pad = "0.1.6"
+colored = "1.9.3"
+dialoguer = "0.6.2"

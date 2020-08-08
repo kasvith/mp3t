@@ -1,3 +1,4 @@
+use pad::PadStr;
 use std::error::Error;
 use std::fmt;
 
@@ -12,7 +13,7 @@ pub enum ID3V1Error {
 impl fmt::Display for ID3V1Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ID3V1Error::IncorrectLength => write!(f, "Incorrect data length"),
+            ID3V1Error::IncorrectLength => write!(f, "Incorrect length"),
             ID3V1Error::TagNotFound => write!(f, "Tag field not found"),
         }
     }
@@ -21,7 +22,7 @@ impl fmt::Display for ID3V1Error {
 impl Error for ID3V1Error {
     fn description(&self) -> &str {
         match *self {
-            ID3V1Error::IncorrectLength => "Incorrect data length",
+            ID3V1Error::IncorrectLength => "Incorrect length",
             ID3V1Error::TagNotFound => "Tag field not found",
         }
     }
@@ -29,12 +30,27 @@ impl Error for ID3V1Error {
 
 #[derive(Debug, PartialEq)]
 pub struct ID3V1Tag {
-    pub song_name: String,
+    pub song_title: String,
     pub artist: String,
-    pub album_name: String,
+    pub album: String,
     pub year: String,
     pub comment: String,
     pub genere: String,
+    pub genere_id: u8,
+}
+
+impl Default for ID3V1Tag {
+    fn default() -> ID3V1Tag {
+        ID3V1Tag {
+            album: "".to_string(),
+            artist: "".to_string(),
+            comment: "".to_string(),
+            genere: "".to_string(),
+            genere_id: 193,
+            song_title: "".to_string(),
+            year: "".to_string(),
+        }
+    }
 }
 
 impl ID3V1Tag {
@@ -51,13 +67,26 @@ impl ID3V1Tag {
         }
 
         Ok(ID3V1Tag {
-            song_name: String::from_utf8_lossy(&data[3..33]).trim().to_owned(),
+            song_title: String::from_utf8_lossy(&data[3..33]).trim().to_owned(),
             artist: String::from_utf8_lossy(&data[33..63]).trim().to_owned(),
-            album_name: String::from_utf8_lossy(&data[63..93]).trim().to_owned(),
+            album: String::from_utf8_lossy(&data[63..93]).trim().to_owned(),
             year: String::from_utf8_lossy(&data[93..97]).trim().to_owned(),
             comment: String::from_utf8_lossy(&data[97..127]).trim().to_owned(),
             genere: generes::TYPES[genere].to_string(),
+            genere_id: genere as u8,
         })
+    }
+
+    pub fn to_buf(&self) -> Vec<u8> {
+        let mut buffer: Vec<u8> = Vec::with_capacity(128);
+        buffer.extend_from_slice("TAG".as_bytes());
+        buffer.extend_from_slice(self.song_title.pad_to_width(30).as_bytes());
+        buffer.extend_from_slice(self.artist.pad_to_width(30).as_bytes());
+        buffer.extend_from_slice(self.album.pad_to_width(30).as_bytes());
+        buffer.extend_from_slice(self.year.pad_to_width(4).as_bytes());
+        buffer.extend_from_slice(self.comment.pad_to_width(30).as_bytes());
+        buffer.push(self.genere_id);
+        buffer
     }
 }
 

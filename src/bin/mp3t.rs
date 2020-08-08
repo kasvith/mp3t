@@ -61,6 +61,16 @@ fn run_app() {
                 }
             }
         }
+        ("edit", Some(cmd)) => {
+            let file = cmd.value_of("file").unwrap();
+            match commands::edit::edit(&file) {
+                Ok(_) => {}
+                Err(e) => {
+                    eprintln!("error: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
         _ => {}
     }
 }
