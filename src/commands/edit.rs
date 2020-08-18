@@ -1,5 +1,6 @@
 use crate::id3v1::ID3V1Tag;
 use dialoguer::Input;
+use std::convert::TryInto;
 use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
@@ -24,12 +25,15 @@ pub fn edit(fname: &str) -> Result<(), Box<dyn Error>> {
         .with_prompt("Song Title")
         .interact()?;
     tag.album = Input::<String>::new().with_prompt("Album").interact()?;
-    let genere_id = dialoguer::Select::new()
+    tag.artist = Input::<String>::new().with_prompt("Artist").interact()?;
+    tag.genere_id = dialoguer::Select::new()
         .items(crate::generes::TYPES)
         .paged(true)
-        .with_prompt("genere")
-        .interact()?;
-    println!("{}", genere_id);
+        .with_prompt("Genere")
+        .interact()?
+        .try_into()
+        .unwrap();
+    tag.comment = Input::<String>::new().with_prompt("Comment").interact()?;
 
     file.write(&tag.to_buf())?;
 
